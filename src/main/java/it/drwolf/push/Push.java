@@ -1,13 +1,9 @@
 package it.drwolf.push;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
@@ -35,27 +31,13 @@ public class Push {
 		this.sender = sender;
 	}
 
-	private HttpResponse androidPush(String payload)
-			throws UnsupportedEncodingException, IOException, ClientProtocolException {
-		HttpClient client = HttpClientBuilder.create().build();
-		HttpPost request = new HttpPost("https://android.googleapis.com/gcm/send");
-
-		request.addHeader("Authorization", "key=" + this.googlePushKey);
-		request.addHeader("Content-Type", "application/json");
-		request.setEntity(new ByteArrayEntity(payload.getBytes("UTF8")));
-
-		HttpResponse response = client.execute(request);
-		return response;
-	}
-
 	private ApnsService getAppleService() {
 		ApnsService service = APNS.newService().withCert(this.applePushCert, this.applePushPassword)
 				.withSandboxDestination().build();
 		return service;
 	}
 
-	private void javaPushApple(final String token, String msg, Map<String, Object> attrib, Integer unread,
-			String sound) {
+	private void pushApple(final String token, String msg, Map<String, Object> attrib, Integer unread, String sound) {
 
 		ApnsService service = this.getAppleService();
 
@@ -80,8 +62,7 @@ public class Push {
 
 	}
 
-	private void javaPushGoogle(final String token, String msg, Map<String, Object> attrib, String sound)
-			throws Exception {
+	private void pushGoogle(final String token, String msg, Map<String, Object> attrib, String sound) throws Exception {
 
 		ObjectMapper mapper = new ObjectMapper();
 
@@ -100,16 +81,23 @@ public class Push {
 		devtok.add(token);
 		String payload = params.toString();
 
-		this.androidPush(payload);
+		HttpClient client = HttpClientBuilder.create().build();
+		HttpPost request = new HttpPost("https://android.googleapis.com/gcm/send");
+
+		request.addHeader("Authorization", "key=" + this.googlePushKey);
+		request.addHeader("Content-Type", "application/json");
+		request.setEntity(new ByteArrayEntity(payload.getBytes("UTF8")));
+
+		client.execute(request);
 
 	}
 
 	public void send(String text, String token, Integer unread, String sound) throws Exception {
 
 		if (token.matches("[0-9a-fA-F]+")) {
-			this.javaPushApple(token, text, new HashMap<String, Object>(), unread, sound);
+			this.pushApple(token, text, new HashMap<String, Object>(), unread, sound);
 		} else {
-			this.javaPushGoogle(token, text, new HashMap<String, Object>(), sound);
+			this.pushGoogle(token, text, new HashMap<String, Object>(), sound);
 		}
 
 	}
