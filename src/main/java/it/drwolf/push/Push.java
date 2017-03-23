@@ -92,12 +92,13 @@ public class Push {
 
 	}
 
-	public void send(String text, String token, Integer unread, String sound) throws Exception {
+	public void send(String text, String token, Integer unread, String sound, Map<String, Object> data)
+			throws Exception {
 
 		if (token.matches("[0-9a-fA-F]+")) {
-			this.pushApple(token, text, new HashMap<String, Object>(), unread, sound);
+			this.pushApple(token, text, data != null ? data : new HashMap<String, Object>(), unread, sound);
 		} else {
-			this.pushGoogle(token, text, new HashMap<String, Object>(), sound);
+			this.pushGoogle(token, text, data != null ? data : new HashMap<String, Object>(), sound);
 		}
 
 	}
